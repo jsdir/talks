@@ -1,0 +1,15 @@
+Thoughts on Deployment
+
+=$ whoami=
+
+- Name :: Jason Sommer
+- Twitter :: @jsdir
+- GitHub :: [[https://github.com/jsdir][github.com/jsdir]]
+- Email :: j@jsdir.net
+
+* Development
+
+  Parts of functional software:
+
+  - development
+  - deployment
