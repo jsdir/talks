@@ -302,6 +302,9 @@ Thoughts on Deployment
   }
   #+end_src
 
-  [[github.com/jsdir/deployer]]
-  [[github.com/jsdir/deployer-kubernetes]]
-  [[github.com/jsdir/talks/blob/2015-deployment]]
+  Deployer:
+    - [[github.com/jsdir/deployer]]
+    - [[github.com/jsdir/deployer-kubernetes]]
+
+  This talk:
+    - [[github.com/jsdir/talks/blob/master/2015-deployment/deployment.org]]
