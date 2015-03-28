@@ -45,7 +45,7 @@ Thoughts on Deployment
 * A Solution
 
   - for my own questions
-  - 12factor is a set of best practices
+  - 12factor is a set of best practices ([[12factor.net]])
   - but it is only supposed to be used for only one codebase
   - it considers anything more than that to be a distributed system
   - most of us are running distributed systems rather than singular apps
