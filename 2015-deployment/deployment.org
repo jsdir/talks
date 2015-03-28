@@ -73,12 +73,12 @@ Thoughts on Deployment
   - we did't know when we ran a distributed system
   - there's no recorded state of what worked when
   - this gets scary for rollbacks
-
+  
 * These problems are inevitable for distributed systems unless we use tools to help
 
 * Git submodules? >_>
 
-* Idea: The twelve-factor +app+ distributed system
+* Idea: The twelve-factor +app+ distributed system 
 
   As the twelve-factor app views the release of the app (service) as a collection of versioned dependencies, the twelve-factor distributed system views the release of the distributed system as a collection of versioned apps (services).
 
@@ -99,7 +99,7 @@ Thoughts on Deployment
 * The release
 
   A distributed system release is a collection of versioned apps (services).
-  Docs: It declares all dependencies, completely and exactly, via a dependency declaration manifest.
+  Docs: It declares all dependencies, completely and exactly, via a dependency declaration manifest. 
 
   {
     "id": 136,
@@ -176,7 +176,7 @@ Thoughts on Deployment
 
   - Small server that maintains and persists that list of releases
     - Stores the releases on disk
-  - Has a RESTful api that allows me to create and deploy releases
+  - Has a RESTful api that allows me to create and deploy releases 
 
 * How do I use it?
 
@@ -276,7 +276,7 @@ Thoughts on Deployment
       }
     }
     #+end_src
-
+  
 * Future?
 
   - Namespaces
