@@ -9,7 +9,7 @@ Thoughts on Deployment
     "twitter": "@jsdir"
   }
   #+end_src
-* Fuctional Software
+* Functional Software
 
   Parts of functional software:
 
