@@ -1,0 +1,948 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Using ML for Drug Discovery</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css">
+    <link rel="stylesheet" href="css/custom.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section data-background-image="media/splash.png" style="background-color: rgba(0, 0, 0, 0.4);">
+          <h2>Using Machine Learning for Drug Discovery</h2>
+          <p>Predicting drug afffinity with genetic algorithms</p>
+        </section>
+        <section>
+          <h3>About</h3>
+          <ul>
+            <li class="fragment">Software engineer / consultant at Two Sigma <img class="base" src="media/two-sigma.png" style="display: inline; height: 90px; vertical-align: middle" /></li>
+            <li class="fragment"><a href="https://github.com/jsdir">github.com/jsdir</a></li>
+          </ul>
+        </section>
+        <section>
+          <p>What is <strong>Drug Discovery</strong> and <strong>Development</strong>?</p>
+          <p class="fragment">How does medicine work?</p>
+          <aside class="notes">
+		        In order to understand how ML can aid drug discovery, we must ask what is drug discovery and development.
+            We'll first need to look at how medicine works.
+	        </aside>
+        </section>
+        <section data-transition="zoom">
+          <p>A true story from <strong>pharmacology</strong></p>
+          <img class="base" src="media/cytoplasm.png" />
+          <img class="base fragment fade-right" src="media/arrow.svg" style="mix-blend-mode: exclusion; position: absolute; top: 510px; left: 40px; filter: invert(100%); width: 196px;" />
+          <aside class="notes">
+            - We're first going to look inside the cytoplasm of the cell.
+            - This is the home of the many metabolic pathways the cell uses to function.
+	        </aside>
+        </section>
+        <section data-transition="zoom">
+          <img class="base" style="width: 640px;" src="media/virus.png" />
+          <aside class="notes">
+            - We're interested in the mechanisms that allow this virus to self-replicate.
+	        </aside>
+        </section>
+        <section data-transition="zoom">
+          <img class="base" src="media/viral-lifecycle.png" style="height: 600px;" />
+          <aside class="notes">
+            - In step 3, both viral RNA and an enzyme called reverse transcriptase are deployed from the virus. This enzyme uses the RNA as a template to create complementary DNA (cDNA).
+	        </aside>
+        </section>
+        <section data-background-video-muted data-background-video="media/hiv-reverse-transcriptase-action.mp4" data-transition="zoom-in slide-out">
+          <aside class="notes">
+            - The enzyme will assemble nucleotides
+          </aside>
+        </section>
+        <section data-transition="zoom-out">
+          <img class="base" src="media/viral-lifecycle.png" style="height: 600px;" />
+          <aside class="notes">
+            - In step 6, the protease will cleave polyproteins that are used in construction of the new virus.
+	        </aside>
+        </section>
+        <section data-background-video-muted data-background-video="media/hiv-protease-action.mp4" data-transition="zoom-in slide-out"></section>
+        <section>
+          <h4>Inhibitory Drugs</h4>
+          <table class="vertical-align" style="font-size: .8em;">
+            <tr>
+              <th>Drug</th>
+              <th>Target</th>
+              <th>Structure</th>
+              <th>Complex</th>
+            </tr>
+            <tr>
+              <td>Nevirapine</td>
+              <td>RT</td>
+              <td><img class="base" src="media/nevirapine-structure.svg" style="filter: invert(100%);"/></td>
+              <td><img class="base" src="media/nevirapine-complex.jpg" /></td>
+            </tr>
+            <tr>
+              <td>Saquinavir</td>
+              <td>Protease</td>
+              <td><img class="base" src="media/saquinavir-structure.svg" style="filter: invert(100%);"/></td>
+              <td><img class="base" src="media/saquinavir-complex.jpg" /></td>
+            </tr>
+          </table>
+          <aside class="notes">
+            - Although both of these drugs are enzyme inhibitors, there are many other therapeutic strategies that drugs can take. We are focused on inhibitors for the remainder of this talk.
+          </aside>
+        </section>
+        <section>
+          <p>Drug Discovery and Development</p>
+          <blockquote class="fragment">The process of bringing a drug from research to market.</blockquote>
+        </section>
+        <section>
+          <img class="base" src="media/drug-development-stages.png" />
+          <div class="fragment fade-up" style="
+                      position: absolute;
+                      top: 541px;
+                      left: 35px;
+                      width: 237px;
+                      background-color: black;
+                      " class="fragment">Discovery</div>
+          <div class="fragment fade-up" style="
+                      position: absolute;
+                      top: 541px;
+                      left: 286px;
+                      width: 484px;
+                      background-color: black;
+                      " class="fragment">Development</div>
+          <aside class="notes">
+            - The process can be split into two parts.
+            - Discovery is finding the drug.
+            - Development is ensuring it doesn't hurt anything else.
+          </aside>
+        </section>
+        <section>
+          <img class="base" src="media/drug-development-stages.png" style="
+                      transform: rotate(90deg) scale(12);
+                      top: 270px;
+                      left: 230px;
+                      position: absolute;
+                      " />
+          <ul style="
+                     top: 0;
+                     left: 500px;
+                     position: absolute;
+                     ">
+            <li class="fragment">10<sup>60</sup> possible compounds in chemical space</li>
+            <li class="fragment">10-year process</li>
+            <li class="fragment">$2.6 billion</li>
+            <li class="fragment">An expensive search problem</li>
+          </ul>
+          <aside class="notes">
+            - If we visualize this as a funnel, we can see that a large amount of compounds is being filtered down to one selected candidate.
+            - We'll be focusing on drug discovery for this talk, but ML applications can be found in every stage listed here.
+          </aside>
+        </section>
+        <section>
+          <h3>Drug Discovery</h3>
+          <ul style="font-size: 0.8em;">
+            <li class="fragment">Target Discovery</li>
+            <ul>
+              <li class="fragment">Finding biological pathways</li>
+              <li class="fragment">Finding exploitable mechanisms in that pathway</li>
+              <li class="fragment">Developing an assay</li>
+            </ul>
+            <li class="fragment">Target to Hit</li>
+            <ul>
+              <li class="fragment">Finding molecules that alter the biological pathway</li>
+              <li class="fragment">High-Throughput Screening (HTS)</li>
+            </ul>
+            <li class="fragment">Hit to Lead (H2L)</li>
+            <ul>
+              <li class="fragment">Evaluating hits with limited optimization</li>
+            </ul>
+            <li class="fragment">Lead Optimization (LO)</li>
+            <ul>
+              <li class="fragment">Studying ADME (absortption, distribution, metabolism, and excretion)</li>
+              <li class="fragment">Studying toxicity</li>
+            </ul>
+          </ul>
+          <aside class="notes">
+            - A friend introduced me to the target to hit process, and that's what we'll be focused on for this talk.
+          </aside>
+        </section>
+        <section>
+          <p>Target to Hit - Screening</p>
+          <table class="horizontal-align no-border" style="font-size: 0.5em;">
+            <tr>
+              <td><img class="base" src="media/hiv-protease.png" /></td>
+              <td><img class="base" src="media/hiv-protease.png" /></td>
+              <td><img class="base" src="media/hiv-protease.png" /></td>
+              <td><img class="base" src="media/hiv-protease.png" /></td>
+            </tr>
+            <tr>
+              <td><strong style="font-size: 2em;">+</strong></td>
+              <td><strong style="font-size: 2em;">+</strong></td>
+              <td><strong style="font-size: 2em;">+</strong></td>
+              <td><strong style="font-size: 2em;">+</strong></td>
+            </tr>
+            <tr>
+              <td><img style="width: 200px;" class="base" src="media/ligand1.png" /></td>
+              <td><img style="width: 200px;" class="base" src="media/ligand2.png" /></td>
+              <td><img style="width: 200px;" class="base" src="media/ligand3.png" /></td>
+              <td><img style="width: 200px;" class="base" src="media/ligand4.png" /></td>
+            </tr>
+            <tr>
+              <td><strong style="font-size: 2em;">=</strong></td>
+              <td><strong style="font-size: 2em;">=</strong></td>
+              <td><strong style="font-size: 2em;">=</strong></td>
+              <td><strong style="font-size: 2em;">=</strong></td>
+            </tr>
+            <tr>
+              <td>-10.24 kCal/mol</td>
+              <td>-32.90 kCal/mol</td>
+              <td>-3.03 kCal/mol</td>
+              <td>-80.21 kCal/mol</td>
+            </tr>
+          </table>
+          <aside class="notes">
+            - Screening is a bruteforce method of finding compounds with high affinity for a given target.
+          </aside>
+        </section>
+        <section>
+          <div style="display: flex;">
+            <div style="flex: 0 0 50%;">
+              <img class="base" src="media/puzzle.jpg" />
+            </div>
+            <div style="flex: 0 0 50%;">
+              <img class="base" src="media/keys.png" />
+            </div>
+          </div>
+        </section>
+        <section>
+          <header><strong>Target to Hit</strong> is a search problem</header>
+          <blockquote class="fragment">Search a set of compounds <strong>(ligands)</strong> for those most likely to bind to the <strong>receptor</strong> at a given <strong>binding site</strong>.</blockquote>
+        </section>
+        <section>
+          <p>Solving the search problem with <strong>HTS</strong></p>
+          <div style="display: flex;">
+            <div style="flex: 0 0 400px;">
+              <img src="media/hts-bot.jpg" />
+              <img class="base" src="media/well.png" />
+            </div>
+            <ul>
+              <li>High Throughput Screening (HTS)</li>
+              <li class="fragment">384-well plates</li>
+              <li class="fragment">Compound libraries</li>
+              <li class="fragment">Scientists can use robotics to screen tens of thousands of compounds</li>
+            </ul>
+          </div>
+        </section>
+        <section>
+          <p>Using Robots for HTS at NHS</p>
+          <video data-autoplay muted src="media/hts.mp4"></video>
+          <aside class="notes">
+            - Extracting compounds from a plate from the compound library
+            - Injecting into a new well
+            - Dispense the target into the well
+            - Observe the results in the well
+          </aside>
+        </section>
+        <section>
+          <img class="base" src="media/hts-pricing.png" />
+          <small>https://www.biotek.com/resources/docs/Miniaturization_Bioscience_Tech.pdf</small>
+          <h1 class="fragment">$$$</h1>
+          <aside class="notes">
+            - This bruteforce method is expensive.
+          </aside>
+        </section>
+        <section>
+          <p>Solving the search problem with <strong>ML</strong></p>
+          <ul>
+            <li class="fragment">Receptor structural information</li>
+            <li class="fragment">Binding site</li>
+            <li class="fragment">Ligand information</li>
+          </ul>
+        </section>
+        <section>
+          <p>Receptor / binding site data from PDB @ <a href="https://www.rcsb.org">rcsb.org</a></p>
+          <aside class="notes">
+            - Tens of thousands of protein structures are available
+            - Most are scanned in using x-ray spectroscopy
+          </aside>
+          <section>
+            <img class="base" style="width: 528px; margin-top: 85px;" src="media/pdb1.png" />
+          </section>
+          <section>
+            <img class="base" style="width: 648px; margin-top: 85px;" src="media/pdb2.png" />
+          </section>
+          <section>
+            <img class="base" style="width: 528px; margin-top: 85px;" src="media/pdb3.png" />
+          </section>
+          <section>
+            <img class="base" style="width: 528px; margin-top: 85px;" src="media/pdb4.png" />
+          </section>
+          <section>
+            <p><strong>X-ray Crystallography</strong></p>
+            <div style="display: flex;">
+              <div style="flex: 0 0 60%;">
+                <img class="base" src="media/diffractometer.jpg" />
+              </div>
+              <div>
+                <img class="base" src="media/diffraction.jpg" />
+                <small style="font-size: 0.3em;">Laue diffraction pattern collected at 14 ID using a tetrameric hemoglobin crystal from Scapharca Inequivalvis (courtesy of W. E. Royer, University of Massachusetts Medical School).</small>
+              </div>
+            </div>
+          </section>
+          <section>
+            <p>3V81.pdb</p>
+            <pre style="font-size: 0.4em;">
+...
+ATOM  15495  CG2 ILE D 393      25.671 -30.671  33.000  1.00 35.23           C  
+ATOM  15496  CD1 ILE D 393      26.353 -27.753  33.542  1.00 31.16           C  
+ATOM  15497  N   GLN D 394      22.074 -29.425  33.020  1.00 43.01           N  
+ATOM  15498  CA  GLN D 394      21.126 -29.496  31.914  1.00 44.92           C  
+ATOM  15499  C   GLN D 394      21.924 -29.442  30.622  1.00 45.70           C  
+ATOM  15500  O   GLN D 394      22.885 -28.681  30.525  1.00 42.47           O  
+ATOM  15501  CB  GLN D 394      20.068 -28.385  31.997  1.00 47.62           C  
+ATOM  15502  CG  GLN D 394      18.615 -28.837  31.693  1.00 58.82           C  
+ATOM  15503  CD  GLN D 394      18.037 -29.911  32.674  1.00 67.94           C  
+ATOM  15504  OE1 GLN D 394      18.086 -29.763  33.900  1.00 64.07           O  
+ATOM  15505  NE2 GLN D 394      17.466 -30.983  32.112  1.00 78.85           N  
+ATOM  15506  N   LYS D 395      21.536 -30.264  29.644  1.00 46.90           N  
+ATOM  15507  CA  LYS D 395      22.294 -30.406  28.394  1.00 44.85           C  
+ATOM  15508  C   LYS D 395      22.666 -29.059  27.782  1.00 43.49           C  
+ATOM  15509  O   LYS D 395      23.785 -28.849  27.323  1.00 41.30           O
+...</pre>
+          </section>
+        </section>
+        <section>
+          <p>Ligand data from PubChem Compound @ <a href="https://www.ncbi.nlm.nih.gov/pccompound">NCBI</a></p>
+          <section>
+            <img class="base" style="width: 528px; margin-top: 85px;" src="media/pubchem.png" />
+          </section>
+          <section>
+            <p>saquinavir.sdf</p>
+            <pre style="font-size: 0.5em;">
+...
+    2.9061   -4.9077    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -3.3522    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -4.3938    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    5.5386    3.4770    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.5386    0.7770    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.7966    3.6019    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    5.9996    3.6019    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1 22  2  0  0  0  0
+ 23  2  1  6  0  0  0
+  2 72  1  0  0  0  0
+  3 31  2  0  0  0  0
+  4 39  2  0  0  0  0
+  5 40  2  0  0  0  0
+  6 15  1  0  0  0  0
+  6 18  1  0  0  0  0
+...</pre>
+          </section>
+        </section>
+        <section>
+          <aside class="notes">
+            - Now that we have data for the receptor and ligands, we can revise the search problem.
+          </aside>
+          <p>The revised search problem</p>
+          <blockquote class="fragment">
+            Search a set of PubChem compounds for those most likely to bind to the receptor model at a given binding site.
+          </blockquote>
+          <ul>
+            <li class="fragment">Virtual Screening (VS)</li>
+            <li class="fragment">Molecular Docking</li>
+          </ul>
+        </section>
+        <section>
+          <p>Molecular Docking</p>
+          <img class="base" style="width: 700px;" src="media/docking-diagram.png" />
+        </section>
+        <section>
+          <p>How do we find the affinity for a complex?</p>
+          <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+            <img class="base" src="media/hiv-protease.png" />
+            <strong style="margin: 20px;">+</strong>
+            <img class="base" src="media/ligand1.png" />
+            <strong style="margin: 20px;">=</strong>
+            <strong style="font-size: 1em; margin-left: 10px;">? kCal/mol</strong>
+          </div>
+        </section>
+        <section>
+          <p>Conformations</p>
+          <div style="background-color: white;">
+            <img class="base" src="media/conformations.png" />
+            <img class="base" src="media/rotatable-bonds.png" />
+          </div>
+          <aside class="notes">
+            - Rotatable bonds
+          </aside>
+        </section>
+        <section>
+          <img class="base" src="media/drug-conformations.png" />
+        </section>
+        <section>
+          <p>Representing the conformation</p>
+          <p class="fragment">$$C_L = (x, y, z, q_w,q_x,q_y,q_z, t_1,t_2,\ldots,t_n)$$</p>
+          <img style="width: 700px;" class="base fragment" src="media/conformation-rep.png" />
+        </section>
+        <section>
+          <p>$$energy(R, L, C_L) = E_{inter} + E_{intra}$$</p>
+          <ul>
+            <li class="fragment"><strong>Inter</strong>molecular energy</li>
+            <ul>
+              <li class="fragment">Energy between the ligand and the receptor</li>
+            </ul>
+            <li class="fragment"><strong>Intra</strong>molecular energy</li>
+            <ul>
+              <li class="fragment">Energy within the ligand</li>
+            </ul>
+          </ul>
+        </section>
+        <section>
+          <p><strong>Inter</strong>molecular Energy</p>
+          <p class="fragment">$$E_{inter} = \sum_{i \in L} \sum_{j \in R}\Bigg[E_{PLP}(r_{ij}) + 332.0\frac{q_i q_j}{{4r_{ij}}^2}\Bigg]$$</p>
+          <img class="base fragment zoom-in" style="margin-top: -60px;" src="media/interaction.png" />
+        </section>
+        <section>
+          <p>Bond energy</p>
+          <img class="base" style="width: 650px;" src="media/bond-potential.png" />
+        </section>
+        <section>
+          <p>Piecewise Linear Potential</p>
+          <p>$$E_{PLP}(r_{ij})$$</p>
+          <img class="base" style="width: 650px;" src="media/plp.png" />
+        </section>
+        <section>
+          <p>Electrostatic Coulomb Interaction</p>
+          <p>$$332.0\frac{q_i q_j}{{4r_{ij}}^2}$$</p>
+          <img class="base" src="media/coulomb.png" />
+        </section>
+        <section>
+          <p><strong>Intra</strong>molecular energy</p>
+          <p class="fragment" style="font-size: 0.7em">$$E_{intra} = \sum_{i < j \in L} E_{PLP}(r_{ij}) + \sum_{b}A[1-cos(m\theta - \theta_0)] + E_{clash}$$</p>
+        </section>
+        <section>
+          <p>Torsional Energy</p>
+          <p>$$\sum_{b}A[1-cos(m\theta - \theta_0)]$$</p>
+          <table>
+            <tr>
+              <td></td>
+              <td>$$\theta_0$$</td>
+              <td>$$m$$</td>
+              <td>$$A$$</td>
+            </tr>
+            <tr>
+              <td>$$sp^2-sp^3$$</td>
+              <td>$$0.0$$</td>
+              <td>$$6$$</td>
+              <td>$$1.5$$</td>
+            </tr>
+            <tr>
+              <td>$$sp^3-sp^3$$</td>
+              <td>$$\pi$$</td>
+              <td>$$3$$</td>
+              <td>$$3.0$$</td>
+            </tr>
+          </table>
+        </section>
+        <section>
+          <p>Hybridization</p>
+          <img class="base" src="media/hybridization.jpg" />
+        </section>
+        <section>
+          <p>Hybridization</p>
+          <section>
+            <img class="base" src="media/ethane.jpg" />
+          </section>
+          <section>
+            <img class="base" src="media/sp3.gif" />
+          </section>
+        </section>
+        <section>
+          <p>Clash Penalty</p>
+          <p>$$E_{clash} = \left\{\begin{array}{11}
+            1000 & : r_{ij} < 2\\
+            0 & : r_{ij} \ge 2
+            \end{array}
+            \right.$$</p>
+        </section>
+        <section data-transition="zoom-in">
+          <p style="font-size: 0.9em">$$energy\big(R, L, (x, y, z, q_w,q_x,q_y,q_z, t_1,t_2,\ldots,t_n)\big)\\ = \sum_{i \in L} \sum_{j \in R}\Bigg[E_{PLP}(r_{ij}) + 332.0\frac{q_i q_j}{{4r_{ij}}^2}\Bigg] + \\\sum_{i < j \in L} E_{PLP}(r_{ij}) + \sum_{b}A[1-cos(m\theta - \theta_0)]\\ + E_{clash}$$</p>
+        </section>
+        <section>
+          <p>$$\min_{C \in S_C} energy(R, L, C)$$</p>
+          <img class="base fragment" style="width: 500px;" src="media/affinity-potential.jpg" />
+        </section>
+        <section>
+          <aside class="notes">
+            - ants
+            - the diagram is only two dimensional
+            - many good solutions
+            - few best solutions
+          </aside>
+          <p>Minimizing a multidimensional function</p>
+          <img class="base fragment zoom-in" src="media/energy-landscape.png" />
+          <img class="base fragment fade-right" src="media/arrow.svg" style="mix-blend-mode: exclusion; position: absolute; top: 464px; left: 40px; filter: invert(100%); width: 196px;" />
+        </section>
+        <section>
+          <p>$$C_L = (x, y, z, q_w,q_x,q_y,q_z, t_1,t_2,\ldots,t_n)$$</p>
+          <ul>
+            <li class="fragment">7 + n dimensions</li>
+            <li class="fragment">
+              <p>Saquinavir has 13 rotatable bonds</p>
+              <img class="base" src="media/saquinavir-structure.svg" style="filter: invert(1); width: 300px;" />
+            </li>
+            <li class="fragment">20-dimensional conformational space</li>
+          </ul>
+        </section>
+        <section>
+          <p>Using <strong>Genetic Algorithms</strong> for optimization</p>
+          <blockquote class="fragment">
+            GAs mimic biological natural selection by repeatedly modifying a population of individual solutions to produce a final generation of optimized solutions.
+          </blockquote>
+        </section>
+        <section>
+          <div style="position: absolute; top: 40px; left: 0;">
+            <img class="base" style="width: 300px;" src="media/differential-evolution.png" />
+          </div>
+          <div class="de-state-marker"></div>
+          <section></section>
+          <section data-state="de-state-initialize">
+            <aside class="notes">
+              - Conformations are uniformly random
+              - They are constrained to a box called the search space.
+              - The search space covers the binding site we want to study.
+              - Our population size (n) was 50.
+              - The conformation is a genome, and each value in the set is a gene.
+              - Describe how the values were initialized for translation, orientation, and torsional genes.
+            </aside>
+            <div class="de-detail">
+              <p><strong>Initialize Population</strong></p>
+              <p class="fragment">$$C = (x, y, z, q_w,q_x,q_y,q_z, t_1,\\t_2,\ldots,t_n)$$</p>
+              <p class="fragment">$$P = \{C_1, C_2, \ldots, C_n\}$$</p>
+            </div>
+          </section>
+          <section data-state="de-state-initialize">
+            <div class="de-detail">
+              <img class="base" src="media/random-generation.png" />
+            </div>
+          </section>
+          <section data-state="de-state-evaluate">
+            <div class="de-detail">
+              <p><strong>Evaluate Energy</strong></p>
+              <p>$$E_n = energy(R, L, P_n)$$</p>
+            </div>
+          </section>
+          <section data-state="de-state-generate">
+            <div class="de-detail" style="font-size: 0.8em;">
+              <p><strong>Generate Offspring</strong></p>
+              <p>For each member of population:</p>
+              <p class="fragment">Let $P_\alpha$, $P_\beta$, $P_\delta$ be random members of the population</p>
+              <p class="fragment">Let $c$ be the genetic crossover</p>
+              <p class="fragment">Let $s$ be the scaling factor</p>
+              <p class="fragment">Let $r \in [0, 1]$ be a randomly generated value</p>
+              <div class="fragment">$$
+                O_{ij} = \left\{\begin{array}{11}
+                P_{\alpha j} + s P_{\beta j} - P_{\delta j} & : r < c\\
+                O_{ij} & : r \ge c
+                \end{array}
+                \right.
+                $$</div>
+            </div>
+          </section>
+          <section data-state="de-state-generate">
+            <div class="de-detail">
+              <p><strong>Generate Offspring</strong></p>
+              <div style="font-size: 0.8em;">$
+                O_{ij} = \left\{\begin{array}{11}
+                P_{\alpha j} + s P_{\beta j} - P_{\delta j} & : r < c\\
+                O_{ij} & : r \ge c
+                \end{array}
+                \right.
+                $</div>
+              <p style="font-size: 0.8em;" class="fragment" data-fragment-index="1">$c=0.9, s=0.5$</p>
+              <table style="font-size: 0.5em; margin: 0;" class="de-table fragment" data-fragment-index="2">
+                <tr>
+                  <td></td>
+                  <td>$x$</td>
+                  <td>$y$</td>
+                  <td>$z$</td>
+                  <td>$q_w$</td>
+                  <td>$q_x$</td>
+                  <td>$q_y$</td>
+                  <td>$q_z$</td>
+                  <td>$t_1$</td>
+                </tr>
+                <tr>
+                  <td>$r$</td>
+                  <td><span class="fragment" data-fragment-index="3">0.51</span></td>
+                  <td><span class="fragment" data-fragment-index="5">0.96</span></td>
+                  <td><span class="fragment" data-fragment-index="7">0.32</span></td>
+                  <td><span class="fragment" data-fragment-index="9">0.36</span></td>
+                  <td><span class="fragment" data-fragment-index="11">0.25</span></td>
+                  <td><span class="fragment" data-fragment-index="13">0.50</span></td>
+                  <td><span class="fragment" data-fragment-index="15">0.38</span></td>
+                  <td><span class="fragment" data-fragment-index="17">0.34</span></td>
+                </tr>
+                <tr>
+                  <td>$P_i$</td>
+                  <td class="de-cell-location de-cell-start"><span>0.01</span></td>
+                  <td class="de-cell-location"><span>0.97</span></td>
+                  <td class="de-cell-location"><span>0.41</span></td>
+                  <td class="de-cell-orientation"><span>0.94</span></td>
+                  <td class="de-cell-orientation"><span>0.48</span></td>
+                  <td class="de-cell-orientation"><span>0.57</span></td>
+                  <td class="de-cell-orientation"><span>0.66</span></td>
+                  <td class="de-cell-torsion de-cell-end"><span>0.09</span></td>
+                </tr>
+                <tr>
+                  <td>$P_{\alpha}$</td>
+                  <td class="de-cell-location de-cell-start"><span>0.71</span></td>
+                  <td class="de-cell-location"><span>0.48</span></td>
+                  <td class="de-cell-location"><span>0.35</span></td>
+                  <td class="de-cell-orientation"><span>0.52</span></td>
+                  <td class="de-cell-orientation"><span>0.01</span></td>
+                  <td class="de-cell-orientation"><span>0.96</span></td>
+                  <td class="de-cell-orientation"><span>0.22</span></td>
+                  <td class="de-cell-torsion de-cell-end"><span>0.03</span></td>
+                </tr>
+                <tr>
+                  <td>$P_{\beta}$</td>
+                  <td class="de-cell-location de-cell-start"><span>0.52</span></td>
+                  <td class="de-cell-location"><span>0.01</span></td>
+                  <td class="de-cell-location"><span>0.96</span></td>
+                  <td class="de-cell-orientation"><span>0.13</span></td>
+                  <td class="de-cell-orientation"><span>0.99</span></td>
+                  <td class="de-cell-orientation"><span>0.66</span></td>
+                  <td class="de-cell-orientation"><span>0.16</span></td>
+                  <td class="de-cell-torsion de-cell-end"><span>0.79</span></td>
+                </tr>
+                <tr>
+                  <td>$P_{\delta}$</td>
+                  <td class="de-cell-location de-cell-start"><span>0.42</span></td>
+                  <td class="de-cell-location"><span>0.81</span></td>
+                  <td class="de-cell-location"><span>0.05</span></td>
+                  <td class="de-cell-orientation"><span>0.32</span></td>
+                  <td class="de-cell-orientation"><span>0.37</span></td>
+                  <td class="de-cell-orientation"><span>0.00</span></td>
+                  <td class="de-cell-orientation"><span>0.73</span></td>
+                  <td class="de-cell-torsion de-cell-end"><span>0.37</span></td>
+                </tr>
+                <tr>
+                  <td>$O_i$</td>
+                  <td class="de-cell-location de-cell-start"><span class="fragment" data-fragment-index="4"><strong>0.61</strong></span></td>
+                  <td class="de-cell-location"><span class="fragment" data-fragment-index="6"><strong>0.97</strong></span></td>
+                  <td class="de-cell-location"><span class="fragment" data-fragment-index="8"><strong>0.78</strong></span></td>
+                  <td class="de-cell-orientation"><span class="fragment" data-fragment-index="10"><strong>0.26</strong></span></td>
+                  <td class="de-cell-orientation"><span class="fragment" data-fragment-index="12"><strong>0.14</strong></span></td>
+                  <td class="de-cell-orientation"><span class="fragment" data-fragment-index="14"><strong>1.29</strong></span></td>
+                  <td class="de-cell-orientation"><span class="fragment" data-fragment-index="16"><strong>-0.43</strong></span></td>
+                  <td class="de-cell-torsion de-cell-end"><span class="fragment" data-fragment-index="18"><strong>0.06</strong></span></td>
+                </tr>
+              </table>
+            </div>
+          </section>
+          <section data-state="de-state-generate">
+            <div class="de-detail">
+              <p><strong>Determine Fitness</strong></p>
+              <p style="font-size: 0.8em;" class="fragment">$$E^o_i = energy(R, L, O_i)$$</p>
+              <p class="fragment">
+                $$
+                P_i = \left\{\begin{array}{11}
+                O_i & : E^o_i > E_i\\
+                P_i & : E^o_i \le E_i
+                \end{array}
+                \right.
+                $$
+              </p>
+            </div>
+          </section>
+          <section data-state="de-state-terminate">
+            <div class="de-detail">
+              <p><strong>Terminate?</strong></p>
+              <p class="fragment">Let $v$ be variance</p>
+              <p class="fragment">$$\overline{E} - \min(E) < v$$</p>
+              <p class="fragment">or if we have reached the iteration limit.</p>
+            </div>
+          </section>
+        </section>
+        <section data-background-video="media/generations-1abe.mp4">
+          <aside class="notes">
+            - We get some interesting behavior over hundreds of generations.
+          </aside>
+        </section>
+        <section data-background-video="media/generations-1bma.mp4">
+        </section>
+        <section>
+          <p>Avoiding local minima</p>
+          <ul>
+            <li class="fragment">Sometimes genetic algorithms will converge on a suboptimal solution</li>
+            <li class="fragment">Multiple runs give us a greater chance of finding the global minimum</li>
+          </ul>
+        </section>
+        <section data-background-image="media/multiple-runs.png">
+          <div style="text-align: left;" class="fragment zoom-in">
+            <pre style="background-color: rgba(0, 0, 0, 0.8); padding: 20px; display: inline-block; width: auto;">
+score: 	-199.62 kcal/mol
+score: 	-194.79 kcal/mol
+score: 	-192.91 kcal/mol
+score: 	-152.98 kcal/mol
+score: 	-146.35 kcal/mol
+score: 	-143.57 kcal/mol
+score: 	-139.40 kcal/mol
+score: 	-127.21 kcal/mol
+score: 	 -74.22 kcal/mol
+score: 	 -61.66 kcal/mol</pre>
+          </div>
+        </section>
+        <section>
+          <p>Verifying results - <strong>RMSD</strong></p>
+          <p class="fragment" style="margin-left: -300px;">$$RMSD = \sqrt{\frac{1}{N}\sum_{i}^{i = N}\delta_i^2}$$</p>
+          <img class="base fragment zoom-in" src="media/rmsd.png" style="width: 595px; margin-top: -166px;" />
+        </section>
+        <section>
+          <aside class="notes">
+            - it's only an approximation
+            - after tweaking for a couple months, built some python scripts to do this comparison
+          </aside>
+          <p>Verifying results</p>
+          <ul>
+            <li class="fragment">134 protein-ligand complexes in GOLD validation set</li>
+            <li class="fragment">Get the best scoring conformation for each complex</li>
+            <li class="fragment">Calculate $RMSD$</li>
+            <li class="fragment">If $RMSD < 2Å$, the prediction is correct</li>
+          </ul>
+        </section>
+        <section>
+          <p>Verifying results</p>
+          <img src="media/rmsd-results.png" />
+          <p class="fragment">80% accuracy</p>
+        </section>
+        <section>
+          <aside class="notes">
+            - Calculating optimization with napkin math.
+            - If L and R are large enough, we're left with hundreds of thousands of bond energies to calculate.
+          </aside>
+          <p>Optimizing the optimizer</p>
+          <ul>
+            <li class="fragment">
+              <span>50 conformations</span>
+              <span class="fragment">$\times$ 3,000 iterations</span>
+              <span class="fragment">$\times$ 10 runs</span>
+            </li>
+            <li class="fragment">1.5 million invocations of the energy function</li>
+            <li class="fragment">Each invocation of energy function calculates potentials for $RL$ bonds</li>
+            <li class="fragment">If $RL = 50000$, we call $$
+              E_{PLP}(r_{ij}) + 332.0\frac{q_i q_j}{{4r_{ij}}^2}
+              $$ 75 billion times!</li>
+          </ul>
+        </section>
+        <section>
+          <p>Limiting complexity</p>
+          <p class="fragment">$$O\Bigg[n\Big(RL + \frac{L(L - 1)}{2} + b\Big)\Bigg]$$</p>
+          <p class="fragment">$$O(nRL)$$</p>
+        </section>
+        <section>
+          <p>Gridmaps</p>
+          <p class="fragment">$$O(nRL) \to O(RE + nL)$$</p>
+          <img class="fragment base" src="media/gridmap.gif" />
+          <aside class="notes">
+            - We bake the potentials into a map. First, we loop through each possible ligand element in the set of ligands that we have to screen.
+            - This number is pretty small.
+            - We then probe at a grid of points in the search space was a different element type, and store the result in a voxel.
+            - This way, when we need to evaluate the energy function, instead of doing $RL$ calculations for the steric part, we only do $R + L$ calculations.
+            - It's a clever solution, and the performance payoff is astronomical.
+          </aside>
+        </section>
+        <section>
+          <p>Performing a full screen</p>
+          <ul>
+            <li class="fragment">It takes ~4 seconds to screen a normal-sized ligand</li>
+            <li class="fragment">Screening 100,000 ligands would take 4.5 days on a single core</li>
+          </ul>
+        </section>
+        <section>
+          <img class="base" src="media/supercomputer.jpg" />
+        </section>
+        <section>
+          <img class="base" src="media/aws.png" />
+          <p>Supercomputing with AWS</p>
+          <ul>
+            <li class="fragment">Downloaded all 80 million PubChem ligands into S3</li>
+            <li class="fragment">Bundled the docking engine into a Docker container</li>
+            <li class="fragment">Used AWS Batch to run docking jobs</li>
+          </ul>
+        </section>
+        <section>
+          <p>Simple web tool</p>
+          <section>
+            <img class="base" src="media/wizard1.png" />
+          </section>
+          <section>
+            <img class="base" src="media/wizard2.png" />
+          </section>
+          <section>
+            <img class="base" src="media/wizard3.gif" />
+          </section>
+        </section>
+        <section>
+          <p>Results</p>
+          <ul>
+            <li class="fragment">100,000 ligands in 15 minutes</li>
+          </ul>
+          <img class="fragment base" src="media/coffee.jpg" />
+        </section>
+        <section>
+          <h3>Method Limitations</h3>
+          <section>
+            <aside class="notes">
+              - right now, our model assumes the protein is completely rigid in it's energy minimized state. the very function of the protease proves that this is not the case, and that better methods will consider the cavity flexible
+              - more advanced models are able to factor protein flexibility into the calculation, but this adds much more dimensionality to the data
+            </aside>
+            <p>Protein Flexibility</p>
+            <img src="media/flexible.gif" class="base" />
+          </section>
+          <section>
+            <p>Quantum Mechanical Effects</p>
+            <img class="base" src="media/bonds.png" />
+            <aside class="notes">
+              - pi bonds
+              - go over different qm effects that are not present in the classical mechanical innterpretation of molecular dynamics
+              - right now, the model assumes that atoms are point masses connected by springs
+            </aside>
+          </section>
+          <section>
+            <img class="base" src="media/newtonian-methods.png" />
+          </section>
+          <section>
+            <p>Water</p>
+            <aside class="notes">
+              - show a pymol of a ligand surrounded by water molecules
+              - the way we handle this now is by just removing all of the water molecules from the protein before docking
+              - show a complex that exclusively uses a water molecule
+              - a better model will be able to find conformations that utilize water molecules, as in nature
+            </aside>
+            <img style="width:800px" src="media/water-bonds.png" class="base" />
+          </section>
+          <section>
+            <img src="media/water.gif" class="base" />
+          </section>
+        </section>
+        <section>
+          <p>Deep Learning for Drug Discovery</p>
+          <ul>
+            <li class="fragment">Gnina - <a href="https://github.com/gnina/gnina">github.com/gnina/gnina</a></li>
+            <ul>
+              <li class="fragment"><a href="https://arxiv.org/abs/1612.02751">arxiv.org/abs/1612.02751</a></li>
+              <li class="fragment">Uses CNNs for scoring complexes</li>
+            </ul>
+          </ul>
+          <img style="width: 350px;" class="base fragment" src="media/gnina.png" />
+          <aside class="notes">
+            - Trains a CNN with volumetric data about successful protein-ligand bindings.
+          </aside>
+        </section>
+        <section>
+          <p>Quantum Computing for Drug Discovery</p>
+          <img class="base" style="width: 600px;" src="media/quantum.png" />
+          <aside class="notes">
+            - Richard Feynman's original perceived use case for quantum computing was in simulating the electronic structure problem. Basically performing the quantum mechanical versions of what we optimized for.
+            - Right now, the largest molecule researchers have been able to simulate is beryllium hydride. Pretty small, but if we are able to simulate thousands of atoms, the story could change.
+            - The results could be more accurate and even more faster than their classical counterpart.
+          </aside>
+        </section>
+        <section>
+          <p>Hardware-efficient Variational Quantum Eigensolver for Small Molecules and Quantum Magnets</p>
+          <p>
+            <a href="https://arxiv.org/abs/1704.05018">arxiv.org/abs/1704.05018</a>
+          </p>
+          <img class="base" src="media/quantum-potential.png" />
+        </section>
+        <section>
+          <h3>My Thoughts</h3>
+          <ul>
+            <li class="fragment">How would accelerating virtual screening affect research?</li>
+            <ul>
+              <li class="fragment">Screening many ligands against one receptor</li>
+              <li class="fragment">Screening one ligand against many receptors</li>
+              <li class="fragment">Screening many ligands against many receptors</li>
+            </ul>
+            <li class="fragment">Could toxicity/ADME be factored into the score?</li>
+          </ul>
+          <aside class="notes">
+            - could we merge some of the steps done in lead optimization or drug development into the screening process? this could help elminate false positives earlier in the pipeline.
+            - proteome screen
+            - ADME - absorption, distribution, metabolism, excretion
+            - companies like Reverie labs are using machine learning to predict ADME from molecular structure
+            - personalized medicine
+            - could we allow user to scan the proteome in realtime while the researcher is building or editing the drug candidate? getting instant feedback from the entire human proteome? the answer could revolutionize the pharma industry.
+          </aside>
+        </section>
+        <section>
+          <h3>What I Learned</h3>
+          <ul>
+            <li class="fragment">Biological pathways are intricate</li>
+            <li class="fragment">Some complex problems can be reduced to an optimization problem</li>
+            <li class="fragment">Cloud computing makes research accessible</li>
+            <li class="fragment">Thomsen R, Christensen MH. MolDock: a new technique for high-accuracy molecular docking. J Med Chem. 2006;49(11):3315-21.</li>
+          </ul>
+        </section>
+        <section data-background-image="media/splash.png" style="background-color: rgba(0, 0, 0, 0.8); padding: 50px;">
+          <h3>In Summary</h3>
+          <ul>
+            <li class="fragment">We understood how certain medicines work</li>
+            <li class="fragment">Molecular docking can guide drug discovery</li>
+            <li class="fragment">We can estimate binding affinity for a complex</li>
+            <li class="fragment">GAs can be used to get the optimal conformation for a complex</li>
+            <li class="fragment">We explored different ways to scale a virtual screen</li>
+          </ul>
+          <aside class="notes">
+            - thanks
+          </aside>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+     // More info about config & dependencies:
+     // - https://github.com/hakimel/reveal.js#configuration
+     // - https://github.com/hakimel/reveal.js#dependencies
+     Reveal.initialize({
+       history: true,
+       dependencies: [
+         { src: 'plugin/markdown/marked.js' },         { src: 'plugin/markdown/markdown.js' },
+         { src: 'plugin/notes/notes.js', async: true },
+         { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+         { src: 'plugin/math/math.js', async: true }
+       ],
+       math: {
+		     mathjax: 'js/mathjax/unpacked/MathJax.js',
+         config: 'TeX-AMS_HTML-full' // See http://docs.mathjax.org/en/latest/config-files.html
+	     },
+     });
+    </script>
+    <!-- MathJax configuration -->
+    <script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+       'HTML-CSS': {
+         styles: {'.MathJax_Display': { margin: 0 }},
+         linebreaks: { automatic: true }
+       }
+     });
+    </script>
+  </body>
+</html>
