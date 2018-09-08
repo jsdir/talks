@@ -27,11 +27,12 @@
       <div class="slides">
         <section data-background-image="media/splash.png" style="background-color: rgba(0, 0, 0, 0.4);">
           <h2>Using Machine Learning for Drug Discovery</h2>
-          <p>Predicting drug afffinity with genetic algorithms</p>
+          <p>Predicting drug affinity with genetic algorithms</p>
         </section>
         <section>
           <h3>About</h3>
           <ul>
+            <li>Jason Sommer</li>
             <li class="fragment">Software engineer / consultant at Two Sigma <img class="base" src="media/two-sigma.png" style="display: inline; height: 90px; vertical-align: middle" /></li>
             <li class="fragment"><a href="https://github.com/jsdir">github.com/jsdir</a></li>
           </ul>
@@ -171,12 +172,19 @@
             </ul>
             <li class="fragment">Lead Optimization (LO)</li>
             <ul>
-              <li class="fragment">Studying ADME (absortption, distribution, metabolism, and excretion)</li>
+              <li class="fragment">Studying ADME (absorption, distribution, metabolism, and excretion)</li>
               <li class="fragment">Studying toxicity</li>
             </ul>
           </ul>
           <aside class="notes">
             - A friend introduced me to the target to hit process, and that's what we'll be focused on for this talk.
+          </aside>
+        </section>
+        <section>
+          <p>Target to Hit</p>
+          <img class="base" style="width: 700px;" src="media/docking-diagram.png" />
+          <aside class="notes">
+            We'll explain some terminology here.
           </aside>
         </section>
         <section>
@@ -239,12 +247,15 @@
               <img class="base" src="media/well.png" />
             </div>
             <ul>
-              <li>High Throughput Screening (HTS)</li>
+              <li class="fragment">Scientists can use robotics to screen hundreds of thousands of compounds</li>
+              <li class="fragment">High Throughput Screening (HTS)</li>
               <li class="fragment">384-well plates</li>
               <li class="fragment">Compound libraries</li>
-              <li class="fragment">Scientists can use robotics to screen tens of thousands of compounds</li>
             </ul>
           </div>
+          <aside class="notes">
+            For decades, we've been able to solve this problem physically in vitro.
+          </aside>
         </section>
         <section>
           <p>Using Robots for HTS at NHS</p>
@@ -483,6 +494,10 @@ ATOM  15509  O   LYS D 395      23.785 -28.849  27.323  1.00 41.30           O
         <section>
           <p>$$\min_{C \in S_C} energy(R, L, C)$$</p>
           <img class="base fragment" style="width: 500px;" src="media/affinity-potential.jpg" />
+          <aside class="notes">
+            - This is a very smooth and simple energy landscape.
+            - The energy landscape for conformation space will be much more rugged.
+          </aside>
         </section>
         <section>
           <aside class="notes">
@@ -490,6 +505,7 @@ ATOM  15509  O   LYS D 395      23.785 -28.849  27.323  1.00 41.30           O
             - the diagram is only two dimensional
             - many good solutions
             - few best solutions
+            - this is just an energy landscape in three dimensions
           </aside>
           <p>Minimizing a multidimensional function</p>
           <img class="base fragment zoom-in" src="media/energy-landscape.png" />
@@ -660,8 +676,8 @@ ATOM  15509  O   LYS D 395      23.785 -28.849  27.323  1.00 41.30           O
               <p class="fragment">
                 $$
                 P_i = \left\{\begin{array}{11}
-                O_i & : E^o_i > E_i\\
-                P_i & : E^o_i \le E_i
+                O_i & : E^o_i < E_i\\
+                P_i & : E^o_i \ge E_i
                 \end{array}
                 \right.
                 $$
@@ -828,9 +844,8 @@ score: 	 -61.66 kcal/mol</pre>
           <section>
             <p>Water</p>
             <aside class="notes">
-              - show a pymol of a ligand surrounded by water molecules
+              - usually ligands are surrounded by water molecules, like this complex
               - the way we handle this now is by just removing all of the water molecules from the protein before docking
-              - show a complex that exclusively uses a water molecule
               - a better model will be able to find conformations that utilize water molecules, as in nature
             </aside>
             <img style="width:800px" src="media/water-bonds.png" class="base" />
@@ -881,7 +896,7 @@ score: 	 -61.66 kcal/mol</pre>
             <li class="fragment">Could toxicity/ADME be factored into the score?</li>
           </ul>
           <aside class="notes">
-            - could we merge some of the steps done in lead optimization or drug development into the screening process? this could help elminate false positives earlier in the pipeline.
+            - could we merge some of the steps done in lead optimization or drug development into the screening process? this could help eliminate false positives earlier in the pipeline.
             - proteome screen
             - ADME - absorption, distribution, metabolism, excretion
             - companies like Reverie labs are using machine learning to predict ADME from molecular structure
@@ -892,9 +907,9 @@ score: 	 -61.66 kcal/mol</pre>
         <section>
           <h3>What I Learned</h3>
           <ul>
-            <li class="fragment">Biological pathways are intricate</li>
+            <li class="fragment">Simple ML algorithms can help us traverse high-dimensional spaces</li>
             <li class="fragment">Some complex problems can be reduced to an optimization problem</li>
-            <li class="fragment">Cloud computing makes research accessible</li>
+            <li class="fragment">Cloud computing makes research much more accessible</li>
             <li class="fragment">Thomsen R, Christensen MH. MolDock: a new technique for high-accuracy molecular docking. J Med Chem. 2006;49(11):3315-21.</li>
           </ul>
         </section>
@@ -908,6 +923,8 @@ score: 	 -61.66 kcal/mol</pre>
             <li class="fragment">We explored different ways to scale a virtual screen</li>
           </ul>
           <aside class="notes">
+            - name
+            - questions
             - thanks
           </aside>
         </section>
